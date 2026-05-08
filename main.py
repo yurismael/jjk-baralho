@@ -517,20 +517,19 @@ with col_cartas:
             }.get(carta.naipe, "")
 
             encantada_cls = "carta-encantada" if carta.esta_encantada else ""
-            desc_txt = (carta.desc() or "") if hasattr(carta, "desc") else ""
 
-            # Conteúdo do tooltip
-            if carta.esta_encantada:
-                tooltip_html = f"""
-                <div class="tooltip-tipo">{carta.tipo}</div>
-                <div class="tooltip-enc">✦ {carta.encantamento}</div>
-                {"<div class='tooltip-desc'>" + desc_txt + "</div>" if desc_txt else ""}
-                """
-            else:
-                tooltip_html = f"""
-                <div class="tooltip-tipo">{carta.tipo}</div>
-                <div class="tooltip-sem-enc">Sem encantamento</div>
-                """
+            # Sempre chama desc() — ele já sabe o que retornar conforme o estado atual
+            desc_txt = carta.desc() if hasattr(carta, "desc") else ""
+
+            # Tooltip: tipo + encantamento (se houver) + descrição atual
+            enc_row = f'<div class="tooltip-enc">✦ {carta.encantamento}</div>' if carta.esta_encantada else ""
+            desc_row = f'<div class="tooltip-desc">{desc_txt}</div>' if desc_txt else ""
+
+            tooltip_html = f"""
+            <div class="tooltip-tipo">{carta.tipo}</div>
+            {enc_row}
+            {desc_row}
+            """
 
             with cols[idx]:
                 st.markdown(f"""
