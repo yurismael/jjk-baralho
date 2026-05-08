@@ -147,7 +147,6 @@ def Encantar_Pôquer(hand, nivel_feitico):
         "Straight", "Flush", "Full House", "Quadra",
         "Straight Flush", "Royal Flush"
     ]
-    bonus_dados = [0, 0, 2, 4, 8]
         
 
     encantamento = encontrar_poker(hand)
@@ -163,7 +162,8 @@ def Encantar_Pôquer(hand, nivel_feitico):
             carta.marca_para_encantar = False
 
             if isinstance(carta, (cl.Carta_Espadas, cl.Carta_Copas)):
-                carta.dados += valor_de_aumento + bonus_dados[nivel_feitico-1]
+                pq_bonus_dados = [0, 0, 2, 4, 8]
+                carta.dados += valor_de_aumento + pq_bonus_dados[nivel_feitico-1]
             elif isinstance(carta, (cl.Carta_Ouros, cl.Carta_Paus)):
                 carta.bônus += valor_de_aumento
         elif carta.esta_encantada:
