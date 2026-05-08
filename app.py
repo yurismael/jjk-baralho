@@ -62,13 +62,25 @@ def render_carta(carta, pos):
             <div style="font-size:0.75rem; color:#888;">Pos: {pos}</div>
         </div>
         <div class="card-popup">
-            <div class="popup-title">{nome} | {tipo}</div>
-            <div class="popup-stat">🔮 Encantamento: {enc}</div>
+            <div class="popup-title">{nome}</div>
+            <div class="popup-stat">{tipo}</div>
+            <div class="popup-stat">Encantamento: {enc}</div>
             <div class="popup-desc">{desc}</div>
         </div>
     </div>
     """
     st.markdown(html, unsafe_allow_html=True)
+
+    st.markdown(
+        """<style>
+        div[data-testid="stButton"] > button[kind="secondary"] {
+            background: #1a1a1a; border: 1px solid #444; color: #f1c40f; font-weight: 500;
+        }
+        div[data-testid="stButton"] > button[kind="secondary"]:hover {
+            background: #2a2a2a; border-color: #f1c40f; box-shadow: 0 0 12px rgba(241,196,15,0.15);
+        }
+        </style>""" , unsafe_allow_html=True
+    )
 
 # 🖥️ Interface Principal
 def main():
@@ -79,36 +91,50 @@ def main():
 
     # --- CONTROLES (SIDEBAR) ---
     with col_ctrl:
-        st.header("📦 Gestão")
-        st.metric("🗃️ No Baralho", st.session_state.baralho.qtd_cartas_no_baralho)
-        st.metric("👐 Na Mão", st.session_state.hand.qtd_cartas_na_mão)
-        st.divider()
-
-        if st.button("🔀 Embaralhar"):
-            st.session_state.baralho.embaralhar()
-            st.success("Baralho embaralhado!")
-            st.rerun()
-
-        if st.button("🎴 Comprar 1 Carta"):
-            msg = capturar_saida(jjkfg.Comprar_Carta, st.session_state.baralho, st.session_state.hand, qtd=1)
+        # COMPRAR
+        if st.button("Comprar", use_container_width=True, type="secondary"):
+            msg = capturar_saida(jjkfg.Comprar_Carta, st.session_state.baralho, st.session_state.hand, qtd=5)
             if msg: st.warning(msg)
             st.rerun()
 
         if st.session_state.hand.qtd_cartas_na_mão > 0:
-            st.divider()
-            st.subheader("🗑️ Descarte")
-            pos_desc = st.number_input("Posição", 1, st.session_state.hand.qtd_cartas_na_mão, key="pos_desc")
-            if st.button("Descartar"):
-                msg = capturar_saida(jjkfg.Descartar_Carta, st.session_state.baralho, st.session_state.hand, int(pos_desc))
-                if msg: st.warning(msg)
-                st.rerun()
+            n = st.session_state.hand.qtd_cartas_na_mão
 
-            st.subheader("💫 Dissipar")
-            pos_disp = st.number_input("Posição", 1, st.session_state.hand.qtd_cartas_na_mão, key="pos_disp")
-            if st.button("Dissipar"):
-                msg = capturar_saida(jjkfg.Dissipar_Encantamento, st.session_state.hand, int(pos_disp))
-                if msg: st.warning(msg)
-                st.rerun()
+            # DESCARTE
+            if st.button("Descartar", use_container_width=True, type="secondary"):
+                if not sel_desc:
+                    st.warning("Selecione ao menos uma posição.")
+                else:
+                    # Descartar_Carta já aceita lista de índices no seu código original
+                    msg = capturar_saida(jjkfg.Descartar_Carta, st.session_state.baralho, st.session_state.hand, sel_desc)
+                    if msg: st.warning(msg)
+                    st.rerun()
+            
+            cols_desc = st.columns(n)
+            sel_desc = []
+            for i in range(n):
+                if cols_desc[i].checkbox(str(i+1), key=f"desc_{i}_{n}"):
+                    sel_desc.append(i+1)
+
+            # DISSIPAR
+            if st.button("Dissipar", use_container_width=True, type="secondary"):
+                if not sel_disp:
+                    st.warning("Selecione ao menos uma posição.")
+                else:
+                    # Dissipar_Encantamento original recebe 1 pos. Iteramos com segurança:
+                    for p in sel_disp:
+                        capturar_saida(jjkfg.Dissipar_Encantamento, st.session_state.hand, p)
+                    st.success("Encantamentos dissipados!")
+                    st.rerun()
+            
+            cols_disp = st.columns(n)
+            sel_disp = []
+            for i in range(n):
+                # Adiciona ✨ se a carta já estiver encantada para facilitar a visualização
+                carta = st.session_state.hand.cartas[i]
+                label = f"{i+1} {'✨' if carta.esta_encantada else ''}"
+                if cols_disp[i].checkbox(label, key=f"disp_{i}_{n}"):
+                    sel_disp.append(i+1)
 
     # --- ÁREA PRINCIPAL ---
     with col_main:
