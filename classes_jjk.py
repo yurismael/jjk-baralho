@@ -1,296 +1,159 @@
 import random
+from typing import List, Dict, Any, Optional
+
+# Constantes centralizadas (fácil manutenção)
+MAX_HAND = 5
+SUIT_ICONS = {"espadas": "♠", "copas": "♥", "ouros": "♦", "paus": "♣"}
+RANKS = {1: "A", 11: "J", 12: "Q", 13: "K"}
 
 class Carta:
-    def __init__(self, naipe, valor):
+    def __init__(self, naipe: str, valor: int):
         self.naipe = naipe
         self.valor = valor
         self.tipo = ""
-
+        
         self.esta_encantada = False
         self.encantamento = ""
-        self.encantar = False
+        self.marca_para_encantar = False
+        
+        self.dados = 1
+        self.faces = 6
+        self.bônus = 0
+        
+        self.tipo_dano = ""
+        self._tipo_base = ""
+
+    @property
+    def ranque(self) -> str: 
+        return RANKS.get(self.valor, str(self.valor))
+    @property
+    def icone(self) -> str: 
+        return SUIT_ICONS.get(self.naipe, "?")
+
+    def desc(self) -> str: ## Não gostei dessa
+        if self.encantamento == "[Uno]": 
+            return "Altera tipo de efeito no próximo uso."
+        if self.encantamento == "[Mentira]": 
+            return "Exige TR Astúcia. Falha = cópia de carta da mão."
+        if "P&B" in self.encantamento: 
+            return "Presidente: Sucesso auto. | Bobo: Falha auto."
+        return f"{self.tipo}: {self.dados}d{self.faces} | Bônus: +{self.bônus}"
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "naipe": self.naipe, 
+            "valor": self.valor, 
+            "tipo": self.tipo,
+            "esta_encantada": self.esta_encantada, 
+            "encantamento": self.encantamento,
+            "marca_para_encantar": self.marca_para_encantar,
+            "dados": self.dados, 
+            "faces": self.faces, 
+            "bônus": self.bônus,
+            "tipo_dano": self.tipo_dano, 
+            "tipo_base": self._tipo_base
+        }
 
     def resetar(self):
         self.esta_encantada = False
         self.encantamento = ""
-        self.encantar = False
-
-    def simbolo(self):
-        if "Pôquer" in self.encantamento:
-            return "p"
-        elif "Blackjack" in self.encantamento:
-            return "b"
-        elif "Truco" in self.encantamento:
-            return "t"
-        elif "Uno" in self.encantamento:
-            return "u"
-        elif "Mentira" in self.encantamento:
-            return "m"
-        elif "P&B" in self.encantamento:
-            if "Presidente" in self.encantamento:
-                return ">" 
-            else: 
-                return "<"
-        else:
-            return ""
-
-    def desc(self):
-        return
-
-    def ver(self):
-        string = []
-
-        ranque = self.get_ranque()
-        naipe = self.icone
-
-        if self.esta_encantada:
-            estrelinha = self.simbolo()
-        else:
-            estrelinha = ""
-
-        string.append("┌")
-        string.append("| Carta: " + estrelinha + ranque + naipe)
-        string.append("| Tipo: " + self.tipo)
-
-        if self.esta_encantada:
-            string.append("| Encantamento: " + self.encantamento)
-
-        string.append("| Descrição: " + self.desc())
-        string.append("└")
-        string = "\n".join(string)
-
-        print(string)
-
-    def get_ranque(self):
-        if self.valor == 1:     return "A"
-        elif self.valor == 11:  return "J"
-        elif self.valor == 12:  return "Q"
-        elif self.valor == 13:  return "K"
-        else:                   return str(self.valor)
+        self.marca_para_encantar = False
+        
+        if self._tipo_base: 
+            self.tipo = self._tipo_base
+        self.dados, self.faces, self.bônus = 1, 6, 0
 
 class Carta_Espadas(Carta):
-    naipe = "espadas"
-    icone = "♠"
-
-    def __init__(self, valor):
+    def __init__(self, valor: int):
         super().__init__("espadas", valor)
-
-        self.tipo = "Dano"
-        self.dados = 1
-        self.faces = 8
+        self.tipo = "Dano"; 
+        self._tipo_base = "Dano"
+        self.faces = 8; 
         self.tipo_dano = "cortante"
 
-    def desc(self):
-        if "Uno" in self.encantamento:
-            return "O próximo dano causado ou recebido será alterado para um tipo escolhido."
-        elif "Mentira" in self.encantamento:
-            return "Ao ser lançada deve ser resistida com um TR Astúcia para detectar a mentira. Se passar, a carta não tem efeito. Se falhar, o usuário pode escolher uma das cartas da mão para copiar."  
-        elif "P&B" in self.encantamento:
-            if "Presidente" in self.encantamento:
-                return "Garante um sucesso automático no próximo teste de ataque, resistência ou perícia."
-            else: 
-                return "Garante uma falha automática no próximo teste de ataque, resistência ou perícia."
-        
-        return f"Causa {self.dados}d{self.faces} de dano {self.tipo_dano}."
-
-    def resetar(self):
-        self.esta_encantada = False
-        self.encantamento = ""
-        self.encantar = False
-
-        if self.tipo == "Especial":
-            self.tipo = "Dano"
-
-        self.dados = 1
-        self.faces = 8
-
-
 class Carta_Copas(Carta):
-    naipe = "copas"
-    icone = "♥"
-
-    def __init__(self, valor):
+    def __init__(self, valor: int):
         super().__init__("copas", valor)
-
-        self.tipo = "Cura"
-        self.dados = 1
-        self.faces = 6
-
-    def desc(self):
-        if "Uno" in self.encantamento:
-            return "O próximo dano recebido se torna cura ou a próxima cura recebida se torna dano."
-        elif "Mentira" in self.encantamento:
-            return "Ao ser lançada deve ser resistida com um TR Astúcia para detectar a mentira. Se passar, a carta não tem efeito. Se falhar, o usuário pode escolher uma das cartas da mão para copiar."  
-        elif "P&B" in self.encantamento:
-            if "Presidente" in self.encantamento:
-                return "Garante um sucesso automático no próximo teste de ataque, resistência ou perícia."
-            else: 
-                return "Garante uma falha automática no próximo teste de ataque, resistência ou perícia."
-        
-        return f"Cura {self.dados}d{self.faces} de HP temporário."
-
-    def resetar(self):
-        self.esta_encantada = False
-        self.encantamento = ""
-        self.encantar = False
-
-        if self.tipo == "Especial":
-            self.tipo = "Cura"
-
-        self.dados = 1
-        self.faces = 6
+        self.tipo = "Cura"; 
+        self._tipo_base = "Cura"
 
 class Carta_Ouros(Carta):
-    naipe = "ouros"
-    icone = "♦"
-
-    def __init__(self, valor):
+    def __init__(self, valor: int):
         super().__init__("ouros", valor)
-
-        self.tipo = "Auxiliar"
-        self.bônus = 1
-
-    def desc(self):
-        if "Uno" in self.encantamento:
-            return "O próximo ataque receberá +4 de margem de crítico."
-        elif "Mentira" in self.encantamento:
-            return "Ao ser lançada deve ser resistida com um TR Astúcia para detectar a mentira. Se passar, a carta não tem efeito. Se falhar, o usuário pode escolher uma das cartas da mão para copiar."  
-        elif "P&B" in self.encantamento:
-            if "Presidente" in self.encantamento:
-                return "Garante um sucesso automático no próximo teste de ataque, resistência ou perícia."
-            else: 
-                return "Garante uma falha automática no próximo teste de ataque, resistência ou perícia."
-        
-        return f"Recebe +{self.bônus} no próximo teste de perícia, ataque ou resistência."
-
-    def resetar(self):
-        self.esta_encantada = False
-        self.encantamento = ""
-        self.encantar = False
-
-        if self.tipo == "Especial":
-            self.tipo = "Auxiliar"
-
-        self.bônus = 1
+        self.tipo = "Auxiliar"; 
+        self._tipo_base = "Auxiliar"
 
 class Carta_Paus(Carta):
-    naipe = "paus"
-    icone = "♣"
-
-    def __init__(self, valor):
+    def __init__(self, valor: int):
         super().__init__("paus", valor)
-
-        self.tipo = "Defesa"
-        self.bônus = 1
-
-    def desc(self):
-        if "Uno" in self.encantamento:
-            return "O inimigo não poderá ativar sua técnica amaldiçoada nessa rodada."
-        elif "Mentira" in self.encantamento:
-            return "Ao ser lançada deve ser resistida com um TR Astúcia para detectar a mentira. Se passar, a carta não tem efeito. Se falhar, o usuário pode escolher uma das cartas da mão para copiar."  
-        elif "P&B" in self.encantamento:
-            if "Presidente" in self.encantamento:
-                return "Garante um sucesso automático no próximo teste de ataque, resistência ou perícia."
-            else: 
-                return "Garante uma falha automática no próximo teste de ataque, resistência ou perícia."
-        
-        return f"Recebe +{self.bônus} de defesa durante o próximo ataque recebido."
-
-    def resetar(self):
-        self.esta_encantada = False
-        self.encantamento = ""
-        self.encantar = False
-
-        if self.tipo == "Especial":
-            self.tipo = "Defesa"
-
-        self.bônus = 1
+        self.tipo = "Defesa"; 
+        self._tipo_base = "Defesa"
 
 class Mão:
-    def __init__(self):
-        self.cartas = []
-        self.qtd_cartas_na_mão = 0
+    def __init__(self): 
+        self.cartas: List[Carta] = []
+    
+    @property
+    def qtd(self) -> int: 
+        return len(self.cartas)
 
-    def inserir_carta(self, carta):
-        if self.qtd_cartas_na_mão == 5: ## Limite padrão de quantas cartas o usuário pode ter na mão
-            print("A mão está cheia.")
-            return
-        self.cartas.append(carta)
-        self.qtd_cartas_na_mão += 1
+    def adicionar(self, carta: Carta) -> str:
+        if self.qtd >= MAX_HAND: 
+            return "A mão está cheia."
+        self.cartas.append(carta); 
+        return "Carta adicionada."
 
-    def remover_carta(self, carta):
-        if carta not in self.cartas:
-            print("A carta não está na mão.")
-            return
-        self.cartas.remove(carta)
-        self.qtd_cartas_na_mão -= 1
+    def remover(self, pos: int) -> str:
+        if not (1 <= pos <= self.qtd): 
+            return "Posição inválida."
+        self.cartas.pop(pos - 1); 
+        return "Carta removida."
 
-    def get_carta(self, posicao): ## A referenciação está sendo feita a partir do índice 1
-        if posicao < 1 or posicao > self.qtd_cartas_na_mão:
-            print("Posição da carta inválida.")
-            return
-        return self.cartas[posicao-1]
+    def pegar(self, pos: int) -> Optional[Carta]:
+        return self.cartas[pos - 1] if 1 <= pos <= self.qtd else None
 
-    def ver(self):
-        if self.qtd_cartas_na_mão == 0:
-            print("A mão está vazia.")
-            return
-
-        string = []
-
-        for carta in self.cartas:
-            ranque = carta.get_ranque()
-            naipe = carta.icone
-
-            if carta.esta_encantada:
-                estrelinha = carta.simbolo()
-            else:
-                estrelinha = ""
-
-            string.append(estrelinha)
-            string.append(f"{ranque}{naipe}")
-            string.append(" | ")
-
-        string = "".join(string)
-        string = "| " + string
-
-        print(string)
+    def to_dict(self) -> Dict[str, Any]:
+        return {"cartas": [c.to_dict() for c in self.cartas]}
 
 class Baralho:
     def __init__(self):
-        self.cartas = []
-        self.qtd_cartas_no_baralho = 0
+        self.cartas: List[Carta] = []
+        self._inicializar()
 
-        for i in range(13):
-            self.cartas.append(Carta_Espadas(i+1))
-            self.cartas.append(Carta_Copas(i+1))
-            self.cartas.append(Carta_Ouros(i+1))
-            self.cartas.append(Carta_Paus(i+1))
-
-            self.qtd_cartas_no_baralho += 4
-
+    def _inicializar(self):
+        self.cartas.clear()
+        for v in range(1, 14):
+            self.cartas.extend([Carta_Espadas(v), Carta_Copas(v), Carta_Ouros(v), Carta_Paus(v)])
         self.embaralhar()
 
-    def embaralhar(self):
+    @property
+    def qtd(self) -> int: 
+        return len(self.cartas)
+    def embaralhar(self): 
         random.shuffle(self.cartas)
 
-    def comprar_carta(self, hand):
-        if self.qtd_cartas_no_baralho <= 0:
-            print("O baralho está vazio.")
-            return
+    def comprar_carta(self, hand: Mão) -> str:
+        if self.qtd == 0: 
+            return "Baralho vazio."
         carta = self.cartas.pop()
-        hand.inserir_carta(carta)
-        self.qtd_cartas_no_baralho -= 1
+        return hand.adicionar(carta)
 
-    def descartar_carta(self, hand, pos):
-        if pos < 1 or pos > hand.qtd_cartas_na_mão:
-            print("Posição da carta inválida.")
-            return
-        carta = hand.get_carta(pos)
-        hand.remover_carta(carta)
-
+    def descartar_carta(self, hand: Mão, pos: int) -> str:
+        carta = hand.pegar(pos) 
+        if not carta: 
+            return "Posição inválida."
+        hand.remover(pos)
         carta.resetar()
-
         self.cartas.append(carta)
-        self.qtd_cartas_no_baralho += 1
         self.embaralhar()
+        return "Carta descartada e reembaralhada."
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {"cartas": [c.to_dict() for c in self.cartas]}
+
+# Fábrica para reconstruir objetos a partir de dicts (essencial para Streamlit)
+def criar_carta(data: Dict[str, Any]) -> Carta:
+    mapping = {"espadas": Carta_Espadas, "copas": Carta_Copas, "ouros": Carta_Ouros, "paus": Carta_Paus}
+    carta = mapping[data["naipe"]](data["valor"])
+    carta.__dict__.update(data)
+    return carta
