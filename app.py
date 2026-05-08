@@ -101,6 +101,7 @@ def main():
             n = st.session_state.hand.qtd_cartas_na_mão
 
             # DESCARTE
+            sel_desc = []
             if st.button("Descartar", use_container_width=True, type="secondary"):
                 if not sel_desc:
                     st.warning("Selecione ao menos uma posição.")
@@ -111,12 +112,13 @@ def main():
                     st.rerun()
             
             cols_desc = st.columns(n)
-            sel_desc = []
             for i in range(n):
                 if cols_desc[i].checkbox(str(i+1), key=f"desc_{i}_{n}"):
                     sel_desc.append(i+1)
 
             # DISSIPAR
+            sel_disp = []
+            
             if st.button("Dissipar", use_container_width=True, type="secondary"):
                 if not sel_disp:
                     st.warning("Selecione ao menos uma posição.")
@@ -128,7 +130,6 @@ def main():
                     st.rerun()
             
             cols_disp = st.columns(n)
-            sel_disp = []
             for i in range(n):
                 # Adiciona ✨ se a carta já estiver encantada para facilitar a visualização
                 carta = st.session_state.hand.cartas[i]
