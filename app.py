@@ -102,11 +102,11 @@ def main():
 
         # DESCARTE
         sel_desc = []
-        if n > 0:
-            for i in range(n):
-                key = f"desc_{i}_{n}"
-                if st.session_state.get(key, False):
-                    sel_desc.append(i + 1)
+        
+        for i in range(n):
+            key = f"desc_{i}_{n}"
+            if st.session_state.get(key, False):
+                sel_desc.append(i + 1)
         if st.button("Descartar", use_container_width=True, type="secondary"):
             if not sel_desc:
                 st.warning("Selecione ao menos uma posição.")
