@@ -10,18 +10,13 @@ class Carta:
     def __init__(self, naipe: str, valor: int):
         self.naipe = naipe
         self.valor = valor
-        self.tipo = ""
         
         self.esta_encantada = False
         self.encantamento = ""
         self.marca_para_encantar = False
         
-        self.dados = 1
-        self.faces = 6
-        self.bônus = 0
-        
-        self.tipo_dano = ""
-        self._tipo_base = ""
+        self.tipo = ""
+        self.tipo_original = ""
 
     @property
     def ranque(self) -> str: 
@@ -30,29 +25,16 @@ class Carta:
     def icone(self) -> str: 
         return SUIT_ICONS.get(self.naipe, "?")
 
-    def desc(self) -> str: ## Não gostei dessa
-        if self.encantamento == "[Uno]": 
-            return "Altera tipo de efeito no próximo uso."
-        if self.encantamento == "[Mentira]": 
-            return "Exige TR Astúcia. Falha = cópia de carta da mão."
-        if "P&B" in self.encantamento: 
-            return "Presidente: Sucesso auto. | Bobo: Falha auto."
-        return f"{self.tipo}: {self.dados}d{self.faces} | Bônus: +{self.bônus}"
-
-    def to_dict(self) -> Dict[str, Any]:
-        return {
-            "naipe": self.naipe, 
-            "valor": self.valor, 
-            "tipo": self.tipo,
-            "esta_encantada": self.esta_encantada, 
-            "encantamento": self.encantamento,
-            "marca_para_encantar": self.marca_para_encantar,
-            "dados": self.dados, 
-            "faces": self.faces, 
-            "bônus": self.bônus,
-            "tipo_dano": self.tipo_dano, 
-            "tipo_base": self._tipo_base
-        }
+    def desc_especial(self):
+        if "Mentira" in self.encantamento:
+            return "Pode escolher uma das cartas da mão para copiar (TR Astúcia para anular)."
+        elif "P&B" in self.encantamento:
+            if "Presidente" in self.encantamento:
+                return "Garante um sucesso automático no próximo teste de ataque, resistência ou perícia."
+            else:
+                return "Garante uma falha automática no próximo teste de ataque, resistência ou perícia."
+        else:
+            return "Erro!"
 
     def resetar(self):
         self.esta_encantada = False
@@ -61,33 +43,92 @@ class Carta:
         
         if self._tipo_base: 
             self.tipo = self._tipo_base
-        self.dados, self.faces, self.bônus = 1, 6, 0
 
 class Carta_Espadas(Carta):
     def __init__(self, valor: int):
         super().__init__("espadas", valor)
-        self.tipo = "Dano"; 
-        self._tipo_base = "Dano"
-        self.faces = 8; 
+        
+        self.tipo = "Ofensivo"; 
+        self._tipo_base = "Ofensivo"
+        
+        self.dados, self.faces = 1, 8
+        self.tipo_dano = "cortante"
+    
+    def desc(self):
+        if self.tipo == "Ofensivo":
+            return f"Causa {self.dados}d{self.faces} de dano {self.tipo_dano}."
+        elif self.encantamento == "[Uno]":
+            return "O próximo dano causado ou recebido será alterado para um tipo escolhido."
+        else: 
+            super.desc_especial()
+    
+    def resetar(self):
+        super.resetar()
+        self.dados, self.faces = 1, 8
         self.tipo_dano = "cortante"
 
 class Carta_Copas(Carta):
     def __init__(self, valor: int):
         super().__init__("copas", valor)
-        self.tipo = "Cura"; 
-        self._tipo_base = "Cura"
+        
+        self.tipo = "Curativo"; 
+        self._tipo_base = "Curativo"
+        
+        self.dados, self.faces = 1, 6
+    
+    def desc(self):
+        if self.tipo == "Curativo":
+            return f"Cura {self.dados}d{self.faces} de HP temporário."
+        elif self.encantamento == "[Uno]":
+            return "O próximo dano recebido se torna cura ou a próxima cura recebida se torna dano."
+        else: 
+            super.desc_especial()
+        
+    def resetar(self):
+        super.resetar()
+        self.dados, self.faces = 1, 6
 
 class Carta_Ouros(Carta):
     def __init__(self, valor: int):
         super().__init__("ouros", valor)
+        
         self.tipo = "Auxiliar"; 
         self._tipo_base = "Auxiliar"
+        
+        self.bônus = 1
+    
+    def desc(self):
+        if self.tipo == "Auxiliar":
+            return f"Recebe +{self.bônus} no próximo teste de perícia, ataque ou resistência."
+        elif self.encantamento == "[Uno]":
+            return "O próximo ataque receberá +4 de margem de crítico."
+        else: 
+            super.desc_especial()
+
+    def resetar(self):
+        super.resetar()
+        self.bônus = 1
 
 class Carta_Paus(Carta):
     def __init__(self, valor: int):
         super().__init__("paus", valor)
-        self.tipo = "Defesa"; 
-        self._tipo_base = "Defesa"
+        
+        self.tipo = "Defensivo"; 
+        self._tipo_base = "Defensivo"
+        
+        self.bônus = 1
+    
+    def desc(self):
+        if self.tipo == "Auxiliar":
+            return f"Recebe +{self.bônus} no próximo teste de perícia, ataque ou resistência."
+        elif self.encantamento == "[Uno]":
+            return "Bloqueia uma técnica amaldiçoada por 1 rodada."
+        else: 
+            super.desc_especial()
+
+    def resetar(self):
+        super.resetar()
+        self.bônus = 1
 
 class Mão:
     def __init__(self): 
@@ -112,9 +153,6 @@ class Mão:
     def pegar(self, pos: int) -> Optional[Carta]:
         return self.cartas[pos - 1] if 1 <= pos <= self.qtd else None
 
-    def to_dict(self) -> Dict[str, Any]:
-        return {"cartas": [c.to_dict() for c in self.cartas]}
-
 class Baralho:
     def __init__(self):
         self.cartas: List[Carta] = []
@@ -126,9 +164,6 @@ class Baralho:
             self.cartas.extend([Carta_Espadas(v), Carta_Copas(v), Carta_Ouros(v), Carta_Paus(v)])
         self.embaralhar()
 
-    @property
-    def qtd(self) -> int: 
-        return len(self.cartas)
     def embaralhar(self): 
         random.shuffle(self.cartas)
 
@@ -144,16 +179,7 @@ class Baralho:
             return "Posição inválida."
         hand.remover(pos)
         carta.resetar()
+        
         self.cartas.append(carta)
         self.embaralhar()
         return "Carta descartada e reembaralhada."
-
-    def to_dict(self) -> Dict[str, Any]:
-        return {"cartas": [c.to_dict() for c in self.cartas]}
-
-# Fábrica para reconstruir objetos a partir de dicts (essencial para Streamlit)
-def criar_carta(data: Dict[str, Any]) -> Carta:
-    mapping = {"espadas": Carta_Espadas, "copas": Carta_Copas, "ouros": Carta_Ouros, "paus": Carta_Paus}
-    carta = mapping[data["naipe"]](data["valor"])
-    carta.__dict__.update(data)
-    return carta
