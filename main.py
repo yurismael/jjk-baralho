@@ -1,6 +1,14 @@
 import streamlit as st
 import classes as cl
 import feitiços as fe
+import time as _time
+
+# ─── Dados Constantes ─────────────────────────────────────────────────────────
+LOG_ICON = {
+    "ok":    "✦",
+    "erro":  "✕",
+    "aviso": "△",
+}
 
 # ─── Configuração da página ───────────────────────────────────────────────────
 st.set_page_config(
@@ -305,6 +313,41 @@ button[kind="primary"]:hover, button[kind="secondary"]:hover {
     color: #3a3430;
     font-style: italic;
 }
+.log-entry {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 8px 12px;
+    border-radius: 6px;
+    border-left: 3px solid transparent;
+    font-family: 'EB Garamond', Georgia, serif;
+    font-size: 0.85rem;
+    margin-bottom: 6px;
+    line-height: 1.4;
+}
+.log-ok    { background: #0a1f14; border-color: #1D9E75; color: #9FE1CB; }
+.log-erro  { background: #1f0a0a; border-color: #E24B4A; color: #F7C1C1; }
+.log-aviso { background: #1f1500; border-color: #BA7517; color: #FAC775; }
+
+.log-icon  { font-size: 1rem; flex-shrink: 0; margin-top: 1px; }
+.log-tag   {
+    font-family: 'Cinzel', serif;
+    font-size: 0.6rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    opacity: 0.6;
+    display: block;
+    margin-bottom: 2px;
+}
+.log-body  { flex: 1; }
+.log-time  {
+    font-size: 0.68rem;
+    opacity: 0.4;
+    margin-left: auto;
+    flex-shrink: 0;
+    font-family: monospace;
+    padding-top: 2px;
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -319,8 +362,9 @@ if "log" not in st.session_state:
 baralho = st.session_state.baralho
 hand    = st.session_state.hand
 
-def log(msg: str, tipo: str = "ok"):
-    st.session_state.log.insert(0, (msg, tipo))
+def log(msg: str, tipo: str = "ok", tag: str = ""):
+    ts = _time.strftime("%H:%M:%S")
+    st.session_state.log.insert(0, (msg, tipo, tag, ts))
     if len(st.session_state.log) > 6:
         st.session_state.log.pop()
 
@@ -339,21 +383,21 @@ with col_feiticos:
     st.markdown('<p class="secao-titulo">✦ Feitiços</p>', unsafe_allow_html=True)
     
     # — Comprar Carta ──────────────────────────────────────────────────────────
-    with st.expander("Comprar Carta", expanded=True):
+    with st.expander("Baralho: Comprar", expanded=True):
         qtd_compra = st.number_input("Quantidade", min_value=1, max_value=5, value=1, key="qtd_compra")
         if st.button("Comprar", key="btn_comprar"):
             espacos = 5 - hand.qtd
             if espacos == 0:
-                log("A mão está cheia.", "erro")
+                log("A mão está cheia.", "erro", "Baralho")
             elif baralho.qtd == 0:
-                log("O baralho está vazio.", "erro")
+                log("O baralho está vazio.", "erro", "Baralho")
             else:
                 n = min(int(qtd_compra), espacos, baralho.qtd)
                 fe.Comprar_Carta(baralho, hand, n)
-                log(f"{n} carta(s) comprada(s).", "ok")
+                log(f"{n} carta(s) comprada(s).", "ok", "Baralho")
 
     # — Descartar Carta ────────────────────────────────────────────────────────
-    with st.expander("Descartar Carta"):
+    with st.expander("Baralho: Descartar"):
         if hand.qtd == 0:
             st.markdown('<p class="mao-vazia">Nenhuma carta na mão.</p>', unsafe_allow_html=True)
         else:
@@ -361,21 +405,21 @@ with col_feiticos:
             sel_descartar = st.multiselect("Selecione as cartas", opcoes, key="sel_descartar")
             if st.button("Descartar", key="btn_descartar"):
                 if not sel_descartar:
-                    log("Nenhuma carta selecionada.", "aviso")
+                    log("Nenhuma carta selecionada.", "aviso", "Baralho")
                 else:
                     indices = sorted([opcoes.index(s) + 1 for s in sel_descartar], reverse=True)
                     fe.Descartar_Carta(baralho, hand, indices)
-                    log(f"{len(indices)} carta(s) descartada(s).", "ok")
+                    log(f"{len(indices)} carta(s) descartada(s).", "ok", "Baralho")
 
     # — Reiniciar Baralho ──────────────────────────────────────────────────────
-    with st.expander("Reiniciar Baralho"):
+    with st.expander("Baralho: Reiniciar"):
         st.markdown('<p class="feitico-desc">Volta o baralho ao estado inicial (52 cartas), descartando a mão.</p>', unsafe_allow_html=True)
         if st.button("Reiniciar", key="btn_reiniciar"):
             st.session_state.baralho = cl.Baralho()
             st.session_state.hand    = cl.Mão()
             baralho = st.session_state.baralho
             hand    = st.session_state.hand
-            log("Baralho reiniciado.", "ok")
+            log("Baralho reiniciado.", "ok", "Baralho")
             st.rerun()
 
     # — Feitiço: Dissipar Encantamento ────────────────────────────────────────
@@ -390,10 +434,10 @@ with col_feiticos:
                 pos = opcoes_e.index(sel_dissipar) + 1
                 carta = hand.get_carta(pos)
                 if not carta.esta_encantada:
-                    log(f"{carta.ranque}{carta.icone} não está encantada.", "aviso")
+                    log(f"{carta.ranque}{carta.icone} não está encantada.", "aviso", "Feitiço · Dissipar")
                 else:
                     fe.Dissipar_Encantamento(hand, pos)
-                    log(f"Encantamento dissipado de {carta.ranque}{carta.icone}.", "ok")
+                    log(f"Encantamento dissipado de {carta.ranque}{carta.icone}.", "ok", "Feitiço · Dissipar")
 
     # — Feitiço: Pôquer ────────────────────────────────────────────────────────
     with st.expander("Encantar: Pôquer"):
@@ -401,11 +445,11 @@ with col_feiticos:
         nivel_poquer = st.number_input("Nível do feitiço", min_value=1, max_value=5, value=1, key="nivel_poquer")
         if st.button("Encantar", key="btn_poquer"):
             if hand.qtd != 5:
-                log("Pôquer requer exatamente 5 cartas na mão.", "erro")
+                log("Pôquer requer exatamente 5 cartas na mão.", "erro", "Feitiço · Pôquer")
             else:
                 encantamento = fe.encontrar_poker(hand)
                 fe.Encantar_Pôquer(hand, int(nivel_poquer))
-                log(f"Encantamento [Pôquer | {encantamento}] realizado!", "ok")
+                log(f"Encantamento [Pôquer | {encantamento}] realizado!", "ok", "Feitiço · Pôquer")
 
     # — Feitiço: Blackjack ─────────────────────────────────────────────────────
     with st.expander("Encantar: Blackjack"):
@@ -413,7 +457,7 @@ with col_feiticos:
         nivel_blackjack = st.number_input("Nível do feitiço", min_value=1, max_value=5, value=1, key="nivel_bj")
         if st.button("Encantar", key="btn_bj"):
             if hand.qtd < 1:
-                log("Blackjack requer ao menos 1 carta na mão.", "erro")
+                log("Blackjack requer ao menos 1 carta na mão.", "erro", "Feitiço · Blackjack")
             else:
                 resultado = fe.contar_21(hand)
                 if resultado != "Blackjack":
@@ -421,10 +465,10 @@ with col_feiticos:
                         11 if c.valor == 1 else (10 if c.valor >= 10 else c.valor)
                         for c in hand.cartas
                     )
-                    log(f"Soma atual: {soma}. Precisa ser 21 para Blackjack.", "aviso")
+                    log(f"Soma atual: {soma}. Precisa ser 21 para Blackjack.", "aviso", "Feitiço · Blackjack")
                 else:
                     fe.Encantar_Blackjack(hand, int(nivel_blackjack))
-                    log("Encantamento [Blackjack] realizado!", "ok")
+                    log("Encantamento [Blackjack] realizado!", "ok", "Feitiço · Blackjack")
 
     # — Feitiço: Truco ─────────────────────────────────────────────────────────
     with st.expander("Encantar: Truco"):
@@ -432,24 +476,24 @@ with col_feiticos:
         nivel_truco = st.number_input("Nível do feitiço", min_value=1, max_value=6, value=1, key="nivel_truco")
         if st.button("Encantar", key="btn_truco"):
             if hand.qtd < 2:
-                log("Truco requer ao menos 2 cartas na mão.", "erro")
+                log("Truco requer ao menos 2 cartas na mão.", "erro", "Feitiço · Truco")
             else:
                 resultado = fe.manilha_vira(hand)
                 if resultado != "Truco":
-                    log("Nenhuma vira encontrada na mão.", "aviso")
+                    log("Nenhuma vira encontrada na mão.", "aviso", "Feitiço · Truco")
                 else:
                     fe.Encantar_Truco(hand, int(nivel_truco))
-                    log("Encantamento [Truco] realizado", "ok")
+                    log("Encantamento [Truco] realizado", "ok", "Feitiço · Truco")
 
     # — Feitiço: Uno ───────────────────────────────────────────────────────────
     with st.expander("Encantar: Uno"):
         st.markdown('<p class="feitico-desc">A mão deve ter apenas uma carta. Encanta essa carta com o efeito Uno baseado no naipe da carta.</p>', unsafe_allow_html=True)
         if st.button("Encantar", key="btn_uno"):
             if hand.qtd != 1:
-                log("Uno requer exatamente 1 carta na mão.", "erro")
+                log("Uno requer exatamente 1 carta na mão.", "erro", "Feitiço · Uno")
             else:
                 fe.Encantar_Uno(hand)
-                log("Encantamento [Uno] realizado!", "ok")
+                log("Encantamento [Uno] realizado!", "ok", "Feitiço · Uno")
 
     # — Feitiço: Mentira ───────────────────────────────────────────────────────
     with st.expander("Encantar: Mentira"):
@@ -462,24 +506,33 @@ with col_feiticos:
             if st.button("Encantar", key="btn_mentira"):
                 pos = opcoes_m.index(sel_mentira) + 1
                 fe.Encantar_Mentira(hand, pos)
-                log("Encantamento [Mentira] realizado!", "ok")
+                log("Encantamento [Mentira] realizado!", "ok", "Feitiço · Mentira")
 
     # — Feitiço: Presidente & Bobo ─────────────────────────────────────────────
     with st.expander("Encantar: Presidente & Bobo"):
         st.markdown('<p class="feitico-desc">A mão deve ter exatamente 2 cartas. A 1ª se torna o "Presidente" e a 2ª se torna o "Bobo".</p>', unsafe_allow_html=True)
         if st.button("Encantar", key="btn_pb"):
             if hand.qtd != 2:
-                log("Presidente & Bobo requer exatamente 2 cartas na mão.", "erro")
+                log("Presidente & Bobo requer exatamente 2 cartas na mão.", "erro", "Feitiço · P&B")
             else:
                 fe.Encantar_Presidente_Bobo(hand)
-                log("Encantamento [Presidente & Bobo] realizado!", "ok")
+                log("Encantamento [Presidente & Bobo] realizado!", "ok", "Feitiço · P&B")
 
     # — Log de ações ───────────────────────────────────────────────────────────
     if st.session_state.log:
         st.markdown('<hr class="divider">', unsafe_allow_html=True)
         st.markdown('<p class="secao-titulo">◈ Log</p>', unsafe_allow_html=True)
-        for msg, tipo in st.session_state.log:
-            st.markdown(f'<p class="msg-{tipo}">› {msg}</p>', unsafe_allow_html=True)
+
+        for msg, tipo, tag, ts in st.session_state.log:
+            icone = LOG_ICON.get(tipo, "·")
+            tag_html = f'<span class="log-tag">{tag}</span>' if tag else ""
+            st.markdown(f"""
+            <div class="log-entry log-{tipo}">
+                <span class="log-icon">{icone}</span>
+                <span class="log-body">{tag_html}{msg}</span>
+                <span class="log-time">{ts}</span>
+            </div>
+            """, unsafe_allow_html=True)
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # COLUNA DIREITA — Cartas
