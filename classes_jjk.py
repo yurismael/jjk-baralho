@@ -60,7 +60,7 @@ class Carta_Espadas(Carta):
         elif self.encantamento == "[Uno]":
             return "O próximo dano causado ou recebido será alterado para um tipo escolhido."
         else: 
-            super.desc_especial()
+            return super.desc_especial()
     
     def resetar(self):
         super.resetar()
@@ -82,7 +82,7 @@ class Carta_Copas(Carta):
         elif self.encantamento == "[Uno]":
             return "O próximo dano recebido se torna cura ou a próxima cura recebida se torna dano."
         else: 
-            super.desc_especial()
+            return super.desc_especial()
         
     def resetar(self):
         super.resetar()
@@ -103,7 +103,7 @@ class Carta_Ouros(Carta):
         elif self.encantamento == "[Uno]":
             return "O próximo ataque receberá +4 de margem de crítico."
         else: 
-            super.desc_especial()
+            return super.desc_especial()
 
     def resetar(self):
         super.resetar()
@@ -124,7 +124,7 @@ class Carta_Paus(Carta):
         elif self.encantamento == "[Uno]":
             return "Bloqueia uma técnica amaldiçoada por 1 rodada."
         else: 
-            super.desc_especial()
+            return super.desc_especial()
 
     def resetar(self):
         super.resetar()
