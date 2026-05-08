@@ -100,42 +100,51 @@ def main():
         if st.session_state.hand.qtd_cartas_na_mão > 0:
             n = st.session_state.hand.qtd_cartas_na_mão
 
-            # DESCARTE
-            sel_desc = []
-            if st.button("Descartar", use_container_width=True, type="secondary"):
-                if not sel_desc:
-                    st.warning("Selecione ao menos uma posição.")
-                else:
-                    # Descartar_Carta já aceita lista de índices no seu código original
-                    msg = capturar_saida(jjkfg.Descartar_Carta, st.session_state.baralho, st.session_state.hand, sel_desc)
-                    if msg: st.warning(msg)
-                    st.rerun()
-            
-            cols_desc = st.columns(n)
-            for i in range(n):
-                if cols_desc[i].checkbox(str(i+1), key=f"desc_{i}_{n}"):
-                    sel_desc.append(i+1)
+        # DESCARTE
+        sel_desc = []
+        for i in range(n):
+            key = f"desc_{i}_{n}"
+            if st.session_state.get(key, False):
+                sel_desc.append(i + 1)
+        if st.button("Descartar", use_container_width=True, type="secondary"):
+            if not sel_desc:
+                st.warning("Selecione ao menos uma posição.")
+            else:
+                msg = capturar_saida(jjkfg.Descartar_Carta, st.session_state.baralho, st.session_state.hand, sel_desc)
+                if msg: st.warning(msg)
+                
+                # Opcional: limpa as seleções após a ação para evitar cliques duplicados
+                for i in range(n):
+                    st.session_state[f"desc_{i}_{n}"] = False
+                st.rerun()
+        cols_desc = st.columns(n)
+        for i in range(n):
+            cols_desc[i].checkbox(str(i+1), key=f"desc_{i}_{n}")
 
-            # DISSIPAR
-            sel_disp = []
-            
-            if st.button("Dissipar", use_container_width=True, type="secondary"):
-                if not sel_disp:
-                    st.warning("Selecione ao menos uma posição.")
-                else:
-                    # Dissipar_Encantamento original recebe 1 pos. Iteramos com segurança:
-                    for p in sel_disp:
-                        capturar_saida(jjkfg.Dissipar_Encantamento, st.session_state.hand, p)
-                    st.success("Encantamentos dissipados!")
-                    st.rerun()
-            
-            cols_disp = st.columns(n)
-            for i in range(n):
-                # Adiciona ✨ se a carta já estiver encantada para facilitar a visualização
-                carta = st.session_state.hand.cartas[i]
-                label = f"{i+1} {'✨' if carta.esta_encantada else ''}"
-                if cols_disp[i].checkbox(label, key=f"disp_{i}_{n}"):
-                    sel_disp.append(i+1)
+        # DISSIPAR
+        sel_disp = []
+        for i in range(n):
+            key = f"disp_{i}_{n}"
+            if st.session_state.get(key, False):
+                sel_disp.append(i + 1)
+        if st.button("Dissipar", use_container_width=True, type="secondary"):
+            if not sel_disp:
+                st.warning("Selecione ao menos uma posição.")
+            else:
+                for p in sel_disp:
+                    capturar_saida(jjkfg.Dissipar_Encantamento, st.session_state.hand, p)
+                st.success("Encantamentos dissipados!")
+                
+                # Opcional: limpa as seleções após a ação
+                for i in range(n):
+                    st.session_state[f"disp_{i}_{n}"] = False
+                    
+                st.rerun()
+        cols_disp = st.columns(n)
+        for i in range(n):
+            carta = st.session_state.hand.cartas[i]
+            label = f"{i+1} {'✨' if carta.esta_encantada else ''}"
+            cols_disp[i].checkbox(label, key=f"disp_{i}_{n}")
 
     # --- ÁREA PRINCIPAL ---
     with col_main:
