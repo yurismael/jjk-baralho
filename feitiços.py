@@ -147,12 +147,14 @@ def Encantar_Pôquer(hand, nivel_feitico):
         "Straight", "Flush", "Full House", "Quadra",
         "Straight Flush", "Royal Flush"
     ]
+    bonus_dados = [0, 0, 2, 4, 8]
+        
 
     encantamento = encontrar_poker(hand)
     if encantamento is None:
         return
 
-    valor_de_aumento = nivel_mãos_poquer.index(encantamento) + nivel_feitico
+    valor_de_aumento = nivel_mãos_poquer.index(encantamento) + nivel_feitico 
 
     for carta in hand.cartas:
         if carta.marca_para_encantar and not carta.esta_encantada:
@@ -161,7 +163,7 @@ def Encantar_Pôquer(hand, nivel_feitico):
             carta.marca_para_encantar = False
 
             if isinstance(carta, (cl.Carta_Espadas, cl.Carta_Copas)):
-                carta.dados += valor_de_aumento
+                carta.dados += valor_de_aumento + bonus_dados[nivel_feitico-1]
             elif isinstance(carta, (cl.Carta_Ouros, cl.Carta_Paus)):
                 carta.bônus += valor_de_aumento
         elif carta.esta_encantada:
@@ -204,7 +206,7 @@ def Encantar_Blackjack(hand, nivel_feitico):
         print("A mão não forma Blackjack.")
         return
 
-    valor_de_aumento = 6 + nivel_feitico - 1
+    valor_de_aumento = 6 + 2 * (nivel_feitico - 1)
 
     for carta in hand.cartas:
         if carta.marca_para_encantar and not carta.esta_encantada:
@@ -260,7 +262,7 @@ def Encantar_Truco(hand, nivel_feitico):
         print("Nenhuma manilha encontrada na mão.")
         return
 
-    valor_de_aumento = 6 + nivel_feitico - 1
+    valor_de_aumento = 6 + 2*(nivel_feitico - 1)
 
     for carta in hand.cartas:
         if carta.marca_para_encantar and not carta.esta_encantada:
@@ -268,7 +270,7 @@ def Encantar_Truco(hand, nivel_feitico):
             carta.encantamento = "[Truco]"
             carta.marca_para_encantar = False
 
-            bonus_naipe = 3 - naipes_truco.index(carta.naipe) if carta.naipe in naipes_truco else 0
+            bonus_naipe = 1 - naipes_truco.index(carta.naipe) if carta.naipe in naipes_truco else 0
 
             if isinstance(carta, (cl.Carta_Espadas, cl.Carta_Copas)):
                 carta.dados += valor_de_aumento + bonus_naipe
