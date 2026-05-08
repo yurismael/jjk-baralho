@@ -244,6 +244,65 @@ button[kind="primary"]:hover, button[kind="secondary"]:hover {
     font-size: 0.82rem !important;
     color: #c9a84c !important;
 }
+.carta-wrapper {
+    position: relative;
+    display: inline-block;
+    width: 110px;
+}
+.carta {
+    cursor: pointer;
+}
+.carta-tooltip {
+    visibility: hidden;
+    opacity: 0;
+    position: absolute;
+    bottom: calc(100% + 10px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: #1a1625;
+    border: 1px solid #c9a84c55;
+    border-radius: 8px;
+    padding: 0.7rem 0.9rem;
+    width: 160px;
+    z-index: 999;
+    transition: opacity 0.2s ease, visibility 0.2s ease;
+    pointer-events: none;
+    box-shadow: 0 8px 24px #00000099;
+}
+.carta-tooltip::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 6px solid transparent;
+    border-top-color: #c9a84c55;
+}
+.carta-wrapper:hover .carta-tooltip {
+    visibility: visible;
+    opacity: 1;
+}
+
+.tooltip-tipo {
+    font-size: 0.6rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: #7a6a4a;
+    margin-bottom: 0.4rem;
+}
+.tooltip-encantamento {
+    font-size: 0.75rem;
+    color: #c9a84c;
+    font-style: italic;
+    margin-bottom: 0.3rem;
+    font-family: 'Cinzel', serif;
+}
+.tooltip-desc {
+    font-size: 0.72rem;
+    color: #9a8e78;
+    line-height: 1.4;
+    font-style: italic;
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -465,20 +524,23 @@ with col_cartas:
 
             with cols[idx]:
                 st.markdown(f"""
-                <div class="carta {naipe_cls} {encantada_cls}">
-                    <div class="{cor_cls}" style="display:flex; justify-content:space-between; align-items:flex-start;">
-                        <span class="carta-valor-topo">{carta.ranque}</span>
-                        <span style="font-size:0.9rem">{carta.icone}</span>
-                    </div>
-                    <div class="carta-icone-centro {cor_cls}">{carta.icone}</div>
-                    <div>
+                <div class="carta-wrapper">
+                    <div class="carta {naipe_cls} {encantada_cls}">
+                        <div class="{cor_cls}" style="display:flex; justify-content:space-between; align-items:flex-start;">
+                            <span class="carta-valor-topo">{carta.ranque}</span>
+                            <span style="font-size:0.9rem">{carta.icone}</span>
+                        </div>
+                        <div class="carta-icone-centro {cor_cls}">{carta.icone}</div>
                         <div class="{cor_cls}" style="display:flex; justify-content:space-between; align-items:flex-end;">
                             <span style="font-size:0.9rem; transform:rotate(180deg); display:inline-block">{carta.icone}</span>
                             <span class="carta-valor-base">{carta.ranque}</span>
                         </div>
-                        <div class="carta-tipo">{carta.tipo}</div>
-                        {enc_html}
-                        <div class="carta-desc">{desc_txt}</div>
+                    </div>
+
+                    <div class="carta-tooltip">
+                        <div class="tooltip-tipo">{carta.tipo}</div>
+                        {f'<div class="tooltip-encantamento">✦ {carta.encantamento}</div>' if carta.esta_encantada else ''}
+                        {f'<div class="tooltip-desc">{desc_txt}</div>' if desc_txt else ''}
                     </div>
                 </div>
                 <div style="text-align:center; margin-top:0.3rem; font-family:'Cinzel',serif; font-size:0.65rem; color:#4a3f30">#{idx+1}</div>
