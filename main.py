@@ -244,27 +244,27 @@ button[kind="primary"]:hover, button[kind="secondary"]:hover {
     font-size: 0.82rem !important;
     color: #c9a84c !important;
 }
+/* Tooltip da carta */
 .carta-wrapper {
     position: relative;
     display: inline-block;
-    width: 110px;
-}
-.carta {
-    cursor: pointer;
 }
 .carta-tooltip {
     visibility: hidden;
     opacity: 0;
-    position: fixed;        /* <-- fixed ao invés de absolute */
+    pointer-events: none;
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 999;
+    width: 160px;
     background: #1a1625;
     border: 1px solid #c9a84c55;
     border-radius: 8px;
-    padding: 0.7rem 0.9rem;
-    width: 160px;
-    z-index: 99999;
-    transition: opacity 0.2s ease, visibility 0.2s ease;
-    pointer-events: none;
-    box-shadow: 0 8px 24px #00000099;
+    padding: 0.7rem 0.8rem;
+    box-shadow: 0 4px 24px #000000bb;
+    transition: opacity 0.18s ease;
 }
 .carta-wrapper:hover .carta-tooltip {
     visibility: visible;
@@ -279,29 +279,30 @@ button[kind="primary"]:hover, button[kind="secondary"]:hover {
     border: 6px solid transparent;
     border-top-color: #c9a84c55;
 }
-.carta-wrapper:hover .carta-tooltip {
-    visibility: visible;
-    opacity: 1;
-}
-
 .tooltip-tipo {
+    font-family: 'Cinzel', serif;
     font-size: 0.6rem;
     letter-spacing: 0.2em;
     text-transform: uppercase;
     color: #7a6a4a;
-    margin-bottom: 0.4rem;
+    margin-bottom: 0.3rem;
 }
-.tooltip-encantamento {
-    font-size: 0.75rem;
+.tooltip-enc {
+    font-size: 0.72rem;
     color: #c9a84c;
     font-style: italic;
-    margin-bottom: 0.3rem;
+    margin-bottom: 0.4rem;
     font-family: 'Cinzel', serif;
 }
 .tooltip-desc {
-    font-size: 0.72rem;
+    font-size: 0.7rem;
     color: #9a8e78;
+    font-style: italic;
     line-height: 1.4;
+}
+.tooltip-sem-enc {
+    font-size: 0.7rem;
+    color: #3a3430;
     font-style: italic;
 }
 </style>
@@ -502,10 +503,10 @@ with col_cartas:
         cols = st.columns(min(hand.qtd, 5))
         for idx, carta in enumerate(hand.cartas):
             naipe_cls = {
-                "espadas": "carta-espadas cor-espadas",
-                "copas":   "carta-copas   cor-copas",
-                "ouros":   "carta-ouros   cor-ouros",
-                "paus":    "carta-paus    cor-paus",
+                "espadas": "carta-espadas",
+                "copas":   "carta-copas",
+                "ouros":   "carta-ouros",
+                "paus":    "carta-paus",
             }.get(carta.naipe, "")
 
             cor_cls = {
@@ -516,12 +517,20 @@ with col_cartas:
             }.get(carta.naipe, "")
 
             encantada_cls = "carta-encantada" if carta.esta_encantada else ""
-
             desc_txt = (carta.desc() or "") if hasattr(carta, "desc") else ""
 
-            enc_html = ""
+            # Conteúdo do tooltip
             if carta.esta_encantada:
-                enc_html = f'<div class="carta-encantamento">{carta.encantamento}</div>'
+                tooltip_html = f"""
+                <div class="tooltip-tipo">{carta.tipo}</div>
+                <div class="tooltip-enc">✦ {carta.encantamento}</div>
+                {"<div class='tooltip-desc'>" + desc_txt + "</div>" if desc_txt else ""}
+                """
+            else:
+                tooltip_html = f"""
+                <div class="tooltip-tipo">{carta.tipo}</div>
+                <div class="tooltip-sem-enc">Sem encantamento</div>
+                """
 
             with cols[idx]:
                 st.markdown(f"""
@@ -537,38 +546,10 @@ with col_cartas:
                             <span class="carta-valor-base">{carta.ranque}</span>
                         </div>
                     </div>
-
-                    <div class="carta-tooltip">
-                        <div class="tooltip-tipo">{carta.tipo}</div>
-                        {f'<div class="tooltip-encantamento">✦ {carta.encantamento}</div>' if carta.esta_encantada else ''}
-                        {f'<div class="tooltip-desc">{desc_txt}</div>' if desc_txt else ''}
-                    </div>
+                    <div class="carta-tooltip">{tooltip_html}</div>
                 </div>
                 <div style="text-align:center; margin-top:0.3rem; font-family:'Cinzel',serif; font-size:0.65rem; color:#4a3f30">#{idx+1}</div>
                 """, unsafe_allow_html=True)
-            st.markdown("""<script>
-                document.querySelectorAll('.carta-wrapper').forEach(wrapper => {
-                    const tooltip = wrapper.querySelector('.carta-tooltip');
-                    if (!tooltip) return;
-
-                    wrapper.addEventListener('mouseenter', e => {
-                        const rect = wrapper.getBoundingClientRect();
-                        tooltip.style.left = (rect.left + rect.width / 2 - 80) + 'px';
-                        tooltip.style.top  = (rect.top - tooltip.offsetHeight - 12) + 'px';
-                    });
-
-                    // Ajusta se sair da tela pelo topo
-                    wrapper.addEventListener('mouseenter', () => {
-                        requestAnimationFrame(() => {
-                            const rect    = wrapper.getBoundingClientRect();
-                            const ttRect  = tooltip.getBoundingClientRect();
-                            if (ttRect.top < 8) {
-                                tooltip.style.top = (rect.bottom + 12) + 'px';
-                            }
-                        });
-                    });
-                });
-                </script>""", unsafe_allow_html=True)
 
     # — Blackjack soma ─────────────────────────────────────────────────────────
     if hand.qtd > 0:
