@@ -265,7 +265,7 @@ def log(msg: str, tipo: str = "ok"):
 
 # ─── Título ───────────────────────────────────────────────────────────────────
 st.markdown('<p class="titulo-principal">⚜ Técnica Amaldiçoada ⚜</p>', unsafe_allow_html=True)
-st.markdown('<p class="subtitulo">Gerenciador de Baralho</p>', unsafe_allow_html=True)
+st.markdown('<p class="subtitulo">Baralho Amaldiçoado Aleatório</p>', unsafe_allow_html=True)
 st.markdown('<hr class="divider">', unsafe_allow_html=True)
 
 # ─── Layout principal: feitiços | cartas ─────────────────────────────────────
@@ -457,7 +457,7 @@ with col_cartas:
 
             encantada_cls = "carta-encantada" if carta.esta_encantada else ""
 
-            desc_txt = carta.desc() if hasattr(carta, "desc") else ""
+            desc_txt = (carta.desc() or "") if hasattr(carta, "desc") else ""
 
             enc_html = ""
             if carta.esta_encantada:
