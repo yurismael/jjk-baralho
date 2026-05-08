@@ -87,7 +87,7 @@ def main():
     st.title("🃏 Gerenciador de Baralho JJK")
     st.caption("Conjure técnicas, encante cartas e gerencie sua mão.")
 
-    col_ctrl, col_main = st.columns([1, 3])
+    col_ctrl, col_fei, col_main = st.columns([1, 1, 2])
 
     # --- CONTROLES (SIDEBAR) ---
     with col_ctrl:
@@ -102,10 +102,11 @@ def main():
 
         # DESCARTE
         sel_desc = []
-        for i in range(n):
-            key = f"desc_{i}_{n}"
-            if st.session_state.get(key, False):
-                sel_desc.append(i + 1)
+        if n > 0:
+            for i in range(n):
+                key = f"desc_{i}_{n}"
+                if st.session_state.get(key, False):
+                    sel_desc.append(i + 1)
         if st.button("Descartar", use_container_width=True, type="secondary"):
             if not sel_desc:
                 st.warning("Selecione ao menos uma posição.")
@@ -146,52 +147,51 @@ def main():
             label = f"{i+1} {'✨' if carta.esta_encantada else ''}"
             cols_disp[i].checkbox(label, key=f"disp_{i}_{n}")
 
+    # --- FEITIÇOS ---
+    # with col_fei:
+#    st.divider()
+#        st.subheader("🔮 Conjurar Técnica")
+#        feitico = st.selectbox("Selecione:", [
+#            "Encantar Pôquer", "Encantar Blackjack", "Encantar Truco",
+#            "Encantar Uno", "Encantar Mentira", "Encantar Presidente & Bobo"
+#        ])
+#
+#        c1, c2, c3 = st.columns([2, 1, 1])
+#        nivel = c2.number_input("Nível (1-10)", 1, 10, 1, key="nivel_feat")
+#        pos = c3.number_input("Posição (1-5)", 1, 5, 1, key="pos_feat")
+#
+#        if c1.button("✨ Conjurar", type="primary", use_container_width=True):
+#            msg = ""
+#            try:
+#                if feitico == "Encantar Pôquer":
+#                    msg = capturar_saida(jjkfe.Encantar_Pôquer, st.session_state.hand, int(nivel))
+#                elif feitico == "Encantar Blackjack":
+#                    msg = capturar_saida(jjkfe.Encantar_Blackjack, st.session_state.hand, int(nivel))
+#                elif feitico == "Encantar Truco":
+#                    msg = capturar_saida(jjkfe.Encantar_Truco, st.session_state.hand, int(nivel))
+#                elif feitico == "Encantar Uno":
+#                    msg = capturar_saida(jjkfe.Encantar_Uno, st.session_state.hand)
+#                elif feitico == "Encantar Mentira":
+#                    msg = capturar_saida(jjkfe.Encantar_Mentira, st.session_state.hand, int(pos))
+#                elif feitico == "Encantar Presidente & Bobo":
+#                    msg = capturar_saida(jjkfe.Encantar_Presidente_Bobo, st.session_state.hand)
+#            except Exception as e:
+#                msg = f"⚠️ Erro interno: {e}"
+#
+#            if msg:
+#                if any(x in msg.lower() for x in ["inválido", "não pode", "cheia", "vazio", "posição"]):
+#                    st.error(msg)
+#                else:
+#                    st.success(msg)
+#            st.rerun()
+
     # --- ÁREA PRINCIPAL ---
     with col_main:
-        st.subheader("👋 Mão Atual")
-        if st.session_state.hand.qtd_cartas_na_mão == 0:
-            st.info("👐 Mão vazia. Use o menu lateral para comprar cartas.")
-        else:
+        if st.session_state.hand.qtd_cartas_na_mão > 0:
             cols = st.columns(min(st.session_state.hand.qtd_cartas_na_mão, 5))
             for i, carta in enumerate(st.session_state.hand.cartas):
                 with cols[i]:
                     render_carta(carta, i + 1)
-
-        st.divider()
-        st.subheader("🔮 Conjurar Técnica")
-        feitico = st.selectbox("Selecione:", [
-            "Encantar Pôquer", "Encantar Blackjack", "Encantar Truco",
-            "Encantar Uno", "Encantar Mentira", "Encantar Presidente & Bobo"
-        ])
-
-        c1, c2, c3 = st.columns([2, 1, 1])
-        nivel = c2.number_input("Nível (1-10)", 1, 10, 1, key="nivel_feat")
-        pos = c3.number_input("Posição (1-5)", 1, 5, 1, key="pos_feat")
-
-        if c1.button("✨ Conjurar", type="primary", use_container_width=True):
-            msg = ""
-            try:
-                if feitico == "Encantar Pôquer":
-                    msg = capturar_saida(jjkfe.Encantar_Pôquer, st.session_state.hand, int(nivel))
-                elif feitico == "Encantar Blackjack":
-                    msg = capturar_saida(jjkfe.Encantar_Blackjack, st.session_state.hand, int(nivel))
-                elif feitico == "Encantar Truco":
-                    msg = capturar_saida(jjkfe.Encantar_Truco, st.session_state.hand, int(nivel))
-                elif feitico == "Encantar Uno":
-                    msg = capturar_saida(jjkfe.Encantar_Uno, st.session_state.hand)
-                elif feitico == "Encantar Mentira":
-                    msg = capturar_saida(jjkfe.Encantar_Mentira, st.session_state.hand, int(pos))
-                elif feitico == "Encantar Presidente & Bobo":
-                    msg = capturar_saida(jjkfe.Encantar_Presidente_Bobo, st.session_state.hand)
-            except Exception as e:
-                msg = f"⚠️ Erro interno: {e}"
-
-            if msg:
-                if any(x in msg.lower() for x in ["inválido", "não pode", "cheia", "vazio", "posição"]):
-                    st.error(msg)
-                else:
-                    st.success(msg)
-            st.rerun()
 
 if __name__ == "__main__":
     main()
