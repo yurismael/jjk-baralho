@@ -135,7 +135,7 @@ def encontrar_poker(hand):
         for carta in hand.cartas:
             if carta.valor == 1 or carta.valor == max(valores):
                 carta.marca_para_encantar = True
-        return "Carta Alta"
+                return "Carta Alta"
 
 def Encantar_Pôquer(hand, nivel_feitico):
     if hand.qtd_cartas_na_mão != 5:
