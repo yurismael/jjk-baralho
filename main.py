@@ -255,19 +255,20 @@ button[kind="primary"]:hover, button[kind="secondary"]:hover {
 .carta-tooltip {
     visibility: hidden;
     opacity: 0;
-    position: absolute;
-    bottom: calc(100% + 10px);
-    left: 50%;
-    transform: translateX(-50%);
+    position: fixed;        /* <-- fixed ao invés de absolute */
     background: #1a1625;
     border: 1px solid #c9a84c55;
     border-radius: 8px;
     padding: 0.7rem 0.9rem;
     width: 160px;
-    z-index: 999;
+    z-index: 99999;
     transition: opacity 0.2s ease, visibility 0.2s ease;
     pointer-events: none;
     box-shadow: 0 8px 24px #00000099;
+}
+.carta-wrapper:hover .carta-tooltip {
+    visibility: visible;
+    opacity: 1;
 }
 .carta-tooltip::after {
     content: '';
@@ -545,6 +546,29 @@ with col_cartas:
                 </div>
                 <div style="text-align:center; margin-top:0.3rem; font-family:'Cinzel',serif; font-size:0.65rem; color:#4a3f30">#{idx+1}</div>
                 """, unsafe_allow_html=True)
+            st.markdown("""<script>
+                document.querySelectorAll('.carta-wrapper').forEach(wrapper => {
+                    const tooltip = wrapper.querySelector('.carta-tooltip');
+                    if (!tooltip) return;
+
+                    wrapper.addEventListener('mouseenter', e => {
+                        const rect = wrapper.getBoundingClientRect();
+                        tooltip.style.left = (rect.left + rect.width / 2 - 80) + 'px';
+                        tooltip.style.top  = (rect.top - tooltip.offsetHeight - 12) + 'px';
+                    });
+
+                    // Ajusta se sair da tela pelo topo
+                    wrapper.addEventListener('mouseenter', () => {
+                        requestAnimationFrame(() => {
+                            const rect    = wrapper.getBoundingClientRect();
+                            const ttRect  = tooltip.getBoundingClientRect();
+                            if (ttRect.top < 8) {
+                                tooltip.style.top = (rect.bottom + 12) + 'px';
+                            }
+                        });
+                    });
+                });
+                </script>""", unsafe_allow_html=True)
 
     # — Blackjack soma ─────────────────────────────────────────────────────────
     if hand.qtd > 0:
