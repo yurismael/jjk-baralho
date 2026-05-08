@@ -382,7 +382,7 @@ col_feiticos, col_cartas = st.columns([1.05, 1.95], gap="large")
 with col_feiticos:
     st.markdown('<p class="secao-titulo">✦ Feitiços</p>', unsafe_allow_html=True)
     
-    # — Comprar Carta ──────────────────────────────────────────────────────────
+    # — Feitiço: Comprar Carta ──────────────────────────────────────────────────────────
     with st.expander("Baralho: Comprar", expanded=True):
         qtd_compra = st.number_input("Quantidade", min_value=1, max_value=5, value=1, key="qtd_compra")
         if st.button("Comprar", key="btn_comprar"):
@@ -396,7 +396,7 @@ with col_feiticos:
                 fe.Comprar_Carta(baralho, hand, n)
                 log(f"{n} carta(s) comprada(s).", "ok", "Baralho")
 
-    # — Descartar Carta ────────────────────────────────────────────────────────
+    # — Feitiço: Descartar Carta ────────────────────────────────────────────────────────
     with st.expander("Baralho: Descartar"):
         if hand.qtd == 0:
             st.markdown('<p class="mao-vazia">Nenhuma carta na mão.</p>', unsafe_allow_html=True)
@@ -411,7 +411,7 @@ with col_feiticos:
                     fe.Descartar_Carta(baralho, hand, indices)
                     log(f"{len(indices)} carta(s) descartada(s).", "ok", "Baralho")
 
-    # — Reiniciar Baralho ──────────────────────────────────────────────────────
+    # — Feitiço: Reiniciar Baralho ──────────────────────────────────────────────────────
     with st.expander("Baralho: Reiniciar"):
         st.markdown('<p class="feitico-desc">Volta o baralho ao estado inicial (52 cartas), descartando a mão.</p>', unsafe_allow_html=True)
         if st.button("Reiniciar", key="btn_reiniciar"):
@@ -423,7 +423,7 @@ with col_feiticos:
             st.rerun()
 
     # — Feitiço: Dissipar Encantamento ────────────────────────────────────────
-    with st.expander("Dissipar Encantamento"):
+    with st.expander("Baralho: Dissipar Encantamento"):
         st.markdown('<p class="feitico-desc">Remove o encantamento de uma carta.</p>', unsafe_allow_html=True)
         if hand.qtd == 0:
             st.markdown('<p class="mao-vazia">Nenhuma carta na mão.</p>', unsafe_allow_html=True)
@@ -634,11 +634,11 @@ with col_cartas:
                 "Straight", "Flush", "Full House", "Quadra",
                 "Straight Flush", "Royal Flush"
             ]
-            idx_mao = nivel_mãos.index(encantamento_poquer) if encantamento_poquer in nivel_mãos else -1
+            idx_mao = 1 + nivel_mãos.index(encantamento_poquer) if encantamento_poquer in nivel_mãos else -1
             st.markdown(f"""
             <div style="background:#13111a; border:1px solid #2c2435; border-radius:6px; padding:0.7rem 1.1rem; margin-top:0.75rem">
                 <div class="secao-titulo" style="margin-bottom:0.5rem">Mão de Pôquer Detectada</div>
                 <div style="font-family:'Cinzel',serif; font-size:1.1rem; color:#c9a84c">{encantamento_poquer or '—'}</div>
-                {'<div style="font-size:0.7rem; color:#5a5040; margin-top:2px">Nível ' + str(idx_mao) + ' de 9</div>' if idx_mao >= 0 else ''}
+                {'<div style="font-size:0.7rem; color:#5a5040; margin-top:2px">Nível ' + str(idx_mao) + ' de 10</div>' if idx_mao >= 0 else ''}
             </div>
             """, unsafe_allow_html=True)
